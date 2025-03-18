@@ -1,0 +1,23 @@
+# Ignore environment files
+.env
+
+# Ignore virtual environment
+venv/
+.Venv/
+.VENV/
+
+# Byte-compiled and cache files
+__pycache__/
+*.py[cod]
+
+# Logs and temp files
+*.log
+*.out
+*.tmp
+*.swp
+
+# Ignore VSCode settings (optional)
+.vscode/
+
+# Ignore MacOS system files
+.DS_Store
