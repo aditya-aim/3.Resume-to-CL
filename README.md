@@ -70,7 +70,7 @@ This project runs on **Python 3.12.7**
 
 ## 📌 **API Endpoints**
 
-### ➡️ **Generate Cover Letter**
+### ➡️ 1.**Generate Cover Letter**
 
 **Endpoint:**
 
@@ -82,31 +82,41 @@ POST /generate_cover_letter
 
 Generates a professional cover letter based on extracted resume data.
 
-**Headers:**
+---
 
-| Key           | Value        | Required |
-| ------------- | ------------ | -------- |
-| `HR`        | HR's Name    | ✅       |
-| `Job-Title` | Job Title    | ✅       |
-| `Company`   | Company Name | ✅       |
+### **Headers:**
 
-**Body:**
+| Key                 | Value           | Required |
+| ------------------- | --------------- | -------- |
+| `HR`              | HR's Name       | ✅       |
+| `Job-Title`       | Job Title       | ✅       |
+| `Company`         | Company Name    | ✅       |
+| `Job-Description` | Job Description | ✅       |
+
+---
+
+### **Body:**
 
 | Key      | Type       | Description               | Required |
 | -------- | ---------- | ------------------------- | -------- |
 | `file` | File (PDF) | Resume file in PDF format | ✅       |
 
-**Example Request:**
+---
+
+### **Example Request:**
 
 ```bash
 curl -X POST "http://127.0.0.1:5000/generate_cover_letter" \
 -H "HR: John Doe" \
 -H "Job-Title: Software Engineer" \
 -H "Company: OpenAI" \
+-H "Job-Description: Developing AI applications." \
 -F "file=@resume.pdf"
 ```
 
-**Example Request (Postman):**
+---
+
+### **Example Request (Postman):**
 
 1. Select `POST` method.
 2. Enter URL: `http://127.0.0.1:5000/generate_cover_letter`
@@ -114,6 +124,7 @@ curl -X POST "http://127.0.0.1:5000/generate_cover_letter" \
    * `HR: John Doe`
    * `Job-Title: Software Engineer`
    * `Company: OpenAI`
+   * `Job-Description: Developing AI applications`
 4. In `Body`, select **form-data** and upload the PDF file under the key  **file** .
 5. Click  **Send** .
 
@@ -131,13 +142,37 @@ Returns the generated cover letter as a downloadable PDF:
 
 ---
 
-### ❌ **Error Response**
+### ❌ **Error Responses**
 
-| Status Code | Error                                 | Description                         |
-| ----------- | ------------------------------------- | ----------------------------------- |
-| `400`     | `Missing HR, Job Title, or Company` | Missing required headers.           |
-| `400`     | `No file provided`                  | File not uploaded in the request.   |
-| `400`     | `No file selected`                  | No file selected during the upload. |
-| `500`     | `Internal Server Error`             | Unexpected error occurred.          |
+| Status Code | Error                                                  | Description                         |
+| ----------- | ------------------------------------------------------ | ----------------------------------- |
+| `400`     | `Missing HR, Job Title, Company, or Job Description` | Missing required headers.           |
+| `400`     | `No file provided`                                   | File not uploaded in the request.   |
+| `400`     | `No file selected`                                   | No file selected during the upload. |
+| `500`     | `Internal Server Error`                              | Unexpected error occurred.          |
+
+---
+
+## 🏆 **How It Works**
+
+1. **PDF Parsing:**
+
+   The API extracts text from the uploaded PDF file using `PyMuPDF`.
+2. **Resume Data Extraction:**
+
+   GPT-4o extracts key details from the resume:
+
+   * Full Name
+   * Experience
+   * Skills
+3. **Cover Letter Generation:**
+
+   GPT-4o generates a professional cover letter using the extracted data and provided job details.
+4. **PDF Generation:**
+
+   The cover letter is formatted and saved as a PDF using `ReportLab`.
+5. **Download:**
+
+   The generated PDF is sent as a response for easy download.
 
 ---
