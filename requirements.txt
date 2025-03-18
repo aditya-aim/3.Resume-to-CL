@@ -3,3 +3,6 @@ langchain
 openai
 python-dotenv
 langchain_community
+fitz
+frontend
+reportlab

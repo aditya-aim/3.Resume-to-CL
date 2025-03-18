@@ -19,19 +19,19 @@ client = openai.Client(api_key=api_key)
 
 def extract_resume_data(resume_text):
     prompt = f"""
-Extract the following information from the resume:
-- Full Name
-- Experience 
-- Key Skills (comma-separated)
+    Extract the following information from the resume:
+    - Full Name
+    - Experience 
+    - Key Skills (comma-separated)
 
-Resume:
-{resume_text}
+    Resume:
+    {resume_text}
 
-Format:
-- Name: <Name>
-- Experience: <Experience>
-- Skills: <Skills>
-"""
+    Format:
+    - Name: <Name>
+    - Experience: <Experience>
+    - Skills: <Skills>
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -40,40 +40,48 @@ Format:
     
     extracted_data = response.choices[0].message.content.strip().split("\n")
     
-    # ✅ Strip leading dash and spaces from keys
-    data = {key.strip('- ').strip(): value.strip() for item in extracted_data for key, value in [item.split(": ", 1)]}
+    print("\n[Raw Extracted Data]:", extracted_data)
+
+    data = {}
+    for item in extracted_data:
+        if ": " in item:
+            key, value = item.split(": ", 1)
+            data[key.strip('- ').strip()] = value.strip()
+        else:
+            print(f"Skipping malformed line: {item}")
 
     return data
 
-def generate_cover_letter(name, job_title, company, experience, skills,HR):
+def generate_cover_letter(name, job_title, company, experience, skills, job_description, HR):
     prompt = f"""
-Write a professional cover letter for {name} applying for the position of {job_title} at {company}.
-- Mention relevant experience: {experience}
-- Include key skills: {skills}
-- It is being written to : {HR}
-- Format the output strictly in the following format:
-  
-{name}  
-Bengaluru  |  +91-9454441867  |  adityasagarverma@gmail.com  
-<newline>  
-<newline>  
-Dear {HR},  
-<newline>  
-<INTRODUCTION_PARAGRAPH>  
-<newline>  
-<EXPERIENCE_PARAGRAPH>  
-<newline>  
-<SKILLS_PARAGRAPH>  
-<newline>  
-<MOTIVATION_PARAGRAPH>  
-<newline>  
-Warmest regards,  
-{name}  
+    Write a professional cover letter for {name} applying for the position of {job_title} at {company}.
+    - Mention relevant experience: {experience}
+    - Include key skills: {skills}
+    - Job description: {job_description}
+    - It is being written to: {HR}
+    - Format the output strictly in the following format:
+    
+    {name}  
+    Bengaluru  |  +91-9454441867  |  adityasagarverma@gmail.com  
+    <newline>  
+    <newline>  
+    Dear {HR},  
+    <newline>  
+    <INTRODUCTION_PARAGRAPH>  
+    <newline>  
+    <EXPERIENCE_PARAGRAPH>  
+    <newline>  
+    <SKILLS_PARAGRAPH>  
+    <newline>  
+    <MOTIVATION_PARAGRAPH>  
+    <newline>  
+    Warmest regards,  
+    {name}  
 
-- Ensure that placeholders like `<INTRODUCTION_PARAGRAPH>`, `<EXPERIENCE_PARAGRAPH>`, etc., are properly filled in.
-- Maintain consistent use of `<newline>` to separate paragraphs.
-- Follow a professional and concise tone.
-"""
+    - Ensure that placeholders like `<INTRODUCTION_PARAGRAPH>`, `<EXPERIENCE_PARAGRAPH>`, etc., are properly filled in based on the job description and other details.
+    - Maintain consistent use of `<newline>` to separate paragraphs.
+    - Follow a professional and concise tone.
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -225,13 +233,14 @@ def generate_cover_letter_api():
         hr = request.headers.get('HR')
         job_title = request.headers.get('Job-Title')
         company = request.headers.get('Company')
+        job_description = request.headers.get('Job-Description')
 
-        if not hr or not job_title or not company:
-            return jsonify({"error": "Missing HR, Job Title, or Company in headers"}), 400
+        if not hr or not job_title or not company or not job_description:
+            return jsonify({"error": "Missing HR, Job Title, Company, or Job Description in headers"}), 400
         
-        if 'file' not in request.files:
-            return jsonify({"error": "No file provided"}), 400
-        
+        if 'file' not in request.files or request.files['file'].filename == '':
+            return jsonify({"error": "No file provided or file name is empty"}), 400
+
         file = request.files['file']
         if file.filename == '':
             return jsonify({"error": "No file selected"}), 400
@@ -254,6 +263,7 @@ def generate_cover_letter_api():
             company,
             extracted_data["Experience"],
             extracted_data["Skills"],
+            job_description,
             hr
         )
 
@@ -265,6 +275,7 @@ def generate_cover_letter_api():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 # ------------ Main ----------------
