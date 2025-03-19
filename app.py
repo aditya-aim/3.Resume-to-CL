@@ -297,17 +297,25 @@ from email import encoders
 
 # Function to send email
 def send_email(receiver_email, pdf_path):
-    sender_email = "pixelsagex@gmail.com"
-    password = "joma jidq shwb dwcy"  # Use App Password if 2FA is enabled
-    receiver_email = "aditya@machinehack.com"
-    
+    sender_email = os.getenv("EMAIL_USERNAME")
+    password = os.getenv("EMAIL_PASSWORD")
+    receiver_email = os.getenv("RECEIVER_EMAIL")
+ 
+
     # Email content
     message = MIMEMultipart()
     message['From'] = sender_email
     message['To'] = receiver_email
-    message['Subject'] = "your Cover Letter"
+    message['Subject'] = "Your Personalized Cover Letter is Ready!"
     
-    body = "Attached is your generated cover letter. Best of luck with your application!"
+    body = """Dear Candidate,
+
+Your tailored cover letter has been generated successfully and is attached to this email.  
+We hope it helps you make a strong impression.
+
+Best regards,  
+Machine-Hack💀
+"""
     message.attach(MIMEText(body, 'plain'))
     
     # Attach the PDF file
