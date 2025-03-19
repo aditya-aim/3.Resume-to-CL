@@ -52,9 +52,9 @@ def extract_resume_data(resume_text):
 
     return data
 
-def generate_cover_letter(name, job_title, company, experience, skills, job_description, HR):
+def generate_cover_letter(name, job_title, company, experience, skills, job_description, HR, tone="Professional", style="Concise"):
     prompt = f"""
-    Write a professional cover letter for {name} applying for the position of {job_title} at {company}.
+    Write a {tone.lower()} and {style.lower()} cover letter for {name} applying for the position of {job_title} at {company}.
     - Mention relevant experience: {experience}
     - Include key skills: {skills}
     - Job description: {job_description}
@@ -80,7 +80,7 @@ def generate_cover_letter(name, job_title, company, experience, skills, job_desc
 
     - Ensure that placeholders like `<INTRODUCTION_PARAGRAPH>`, `<EXPERIENCE_PARAGRAPH>`, etc., are properly filled in based on the job description and other details.
     - Maintain consistent use of `<newline>` to separate paragraphs.
-    - Follow a professional and concise tone.
+    - Follow a {tone.lower()} tone and {style.lower()} style.
     """
 
     response = client.chat.completions.create(
@@ -226,6 +226,7 @@ def save_cover_letter_as_pdf(content, filename="cover_letter.pdf"):
 #============================================ API ==========================================
 
 # ------------ Flask Route ----------------
+
 @app.route('/generate_cover_letter', methods=['POST'])
 def generate_cover_letter_api():
     try:
@@ -234,6 +235,13 @@ def generate_cover_letter_api():
         job_title = request.headers.get('Job-Title')
         company = request.headers.get('Company')
         job_description = request.headers.get('Job-Description')
+        tone = request.headers.get('Tone', 'Professional')  # Default to 'Professional'
+        style = request.headers.get('Style', 'Concise')     # Default to 'Concise'
+
+        # Tones: Professional, Casual, Formal, Creative, Empathetic  
+        # Styles: Concise, Detailed, Persuasive, Friendly, Narrative  
+
+
 
         if not hr or not job_title or not company or not job_description:
             return jsonify({"error": "Missing HR, Job Title, Company, or Job Description in headers"}), 400
@@ -264,7 +272,9 @@ def generate_cover_letter_api():
             extracted_data["Experience"],
             extracted_data["Skills"],
             job_description,
-            hr
+            hr,
+            tone,
+            style
         )
 
         # Step 4: Save Cover Letter as PDF
@@ -275,6 +285,77 @@ def generate_cover_letter_api():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+#------------------------------------- MAIL SEND
+from flask import Flask, request, jsonify, send_file
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+# Function to send email
+def send_email(receiver_email, pdf_path):
+    sender_email = "pixelsagex@gmail.com"
+    password = "joma jidq shwb dwcy"  # Use App Password if 2FA is enabled
+    receiver_email = "aditya@machinehack.com"
+    
+    # Email content
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = receiver_email
+    message['Subject'] = "your Cover Letter"
+    
+    body = "Attached is your generated cover letter. Best of luck with your application!"
+    message.attach(MIMEText(body, 'plain'))
+    
+    # Attach the PDF file
+    with open(pdf_path, 'rb') as attachment:
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(attachment.read())
+        encoders.encode_base64(part)
+        part.add_header(
+            'Content-Disposition',
+            f'attachment; filename={os.path.basename(pdf_path)}'
+        )
+        message.attach(part)
+    
+    # Send the email
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+        print("✅ Email sent successfully!")
+    except Exception as e:
+        print(f"❌ Error sending email: {e}")
+        raise
+
+# New route to send cover letter via email
+@app.route('/send_cover_letter', methods=['POST'])
+def send_cover_letter():
+    try:
+        # Get email from request headers or body
+        receiver_email = request.headers.get('Email') or request.json.get('email')
+        if not receiver_email:
+            return jsonify({"error": "Missing email address"}), 400
+        
+        # Check if the generated PDF exists
+        pdf_path = os.path.join(os.getcwd(), 'cover_letter.pdf')
+        if not os.path.exists(pdf_path):
+            return jsonify({"error": "Cover letter not found. Generate it first."}), 400
+        
+        # Send email
+        send_email(receiver_email, pdf_path)
+
+        return jsonify({"message": "Cover letter sent successfully!"}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 
