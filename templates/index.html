@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Letter Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 2rem;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+        }
+        .btn-primary {
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .alert {
+            display: none;
+            margin-top: 1rem;
+        }
+        .extracted-data {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center mb-0">Cover Letter Generator</h2>
+            </div>
+            <div class="card-body">
+                <form id="coverLetterForm">
+                    <div class="mb-3">
+                        <label for="resume" class="form-label">Upload Resume (PDF)</label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="resume" accept=".pdf" required>
+                            <button type="button" class="btn btn-primary" id="uploadBtn">Upload Resume</button>
+                        </div>
+                    </div>
+
+                    <div class="extracted-data" id="extractedDataSection" style="display: none;">
+                        <h5>Extracted Information</h5>
+                        <div class="mb-3">
+                            <label for="extractedName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="extractedName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="extractedExperience" class="form-label">Experience</label>
+                            <input type="text" class="form-control" id="extractedExperience">
+                        </div>
+                        <div class="mb-3">
+                            <label for="extractedSkills" class="form-label">Skills</label>
+                            <input type="text" class="form-control" id="extractedSkills">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="jobTitle" class="form-label">Job Title</label>
+                        <input type="text" class="form-control" id="jobTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="company" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="company" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="jobDescription" class="form-label">Job Description</label>
+                        <textarea class="form-control" id="jobDescription" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hrName" class="form-label">HR Name (Optional)</label>
+                        <input type="text" class="form-control" id="hrName">
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Section Weights</h5>
+                        <div class="mb-3">
+                            <label for="introductionWeight" class="form-label">Introduction Weight: <span id="introductionValue">3</span>/5</label>
+                            <input type="range" class="form-range" id="introductionWeight" min="1" max="5" value="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="experienceWeight" class="form-label">Experience Weight: <span id="experienceValue">3</span>/5</label>
+                            <input type="range" class="form-range" id="experienceWeight" min="1" max="5" value="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="skillsWeight" class="form-label">Skills Weight: <span id="skillsValue">3</span>/5</label>
+                            <input type="range" class="form-range" id="skillsWeight" min="1" max="5" value="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="motivationWeight" class="form-label">Motivation Weight: <span id="motivationValue">3</span>/5</label>
+                            <input type="range" class="form-range" id="motivationWeight" min="1" max="5" value="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="conclusionWeight" class="form-label">Conclusion Weight: <span id="conclusionValue">3</span>/5</label>
+                            <input type="range" class="form-range" id="conclusionWeight" min="1" max="5" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email to receive the cover letter</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary" id="generateBtn" disabled>Generate Cover Letter</button>
+                    </div>
+                </form>
+
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Generating your cover letter...</p>
+                </div>
+
+                <div class="alert alert-success" role="alert">
+                    Cover letter generated successfully! Check your email.
+                </div>
+
+                <div class="alert alert-danger" role="alert">
+                    An error occurred. Please try again.
+                </div>
+
+                <div class="text-center mt-3" id="actionButtons" style="display: none;">
+                    <a href="/download_cover_letter" class="btn btn-success me-2" id="downloadBtn">
+                        <i class="bi bi-download"></i> Download PDF
+                    </a>
+                    <button type="button" class="btn btn-primary" id="sendEmailBtn">
+                        <i class="bi bi-envelope"></i> Send via Email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let extractedResumeData = null;
+        let generatedPdfPath = null;
+
+        // Update slider values display
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', function() {
+                const value = this.value;
+                const id = this.id.replace('Weight', 'Value');
+                const valueElement = document.getElementById(id);
+                if (valueElement) {
+                    valueElement.textContent = value;
+                }
+            });
+        });
+
+        // Handle resume upload
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('resume');
+            const loading = document.querySelector('.loading');
+            const errorAlert = document.querySelector('.alert-danger');
+            const extractedDataSection = document.getElementById('extractedDataSection');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (!fileInput.files[0]) {
+                errorAlert.textContent = 'Please select a resume file first.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            loading.style.display = 'block';
+            errorAlert.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('resume', fileInput.files[0]);
+
+            try {
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    const errorData = await uploadResponse.json();
+                    throw new Error(errorData.error || 'Upload failed');
+                }
+
+                const uploadData = await uploadResponse.json();
+                extractedResumeData = uploadData.data;
+
+                // Fill in the extracted data fields
+                document.getElementById('extractedName').value = extractedResumeData.name;
+                document.getElementById('extractedExperience').value = extractedResumeData.experience;
+                document.getElementById('extractedSkills').value = extractedResumeData.skills;
+
+                // Show the extracted data section and enable generate button
+                extractedDataSection.style.display = 'block';
+                generateBtn.disabled = false;
+
+                loading.style.display = 'none';
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = error.message || 'Failed to process resume';
+                errorAlert.style.display = 'block';
+                console.error('Error:', error);
+            }
+        });
+
+        // Handle cover letter generation
+        document.getElementById('coverLetterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loading = document.querySelector('.loading');
+            const successAlert = document.querySelector('.alert-success');
+            const errorAlert = document.querySelector('.alert-danger');
+            
+            loading.style.display = 'block';
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('resume', document.getElementById('resume').files[0]);
+            formData.append('job_title', document.getElementById('jobTitle').value);
+            formData.append('company', document.getElementById('company').value);
+            formData.append('job_description', document.getElementById('jobDescription').value);
+            formData.append('hr_name', document.getElementById('hrName').value || 'Hiring Manager');
+            formData.append('email', document.getElementById('email').value);
+
+            // Add the edited extracted information
+            formData.append('name', document.getElementById('extractedName').value);
+            formData.append('experience', document.getElementById('extractedExperience').value);
+            formData.append('skills', document.getElementById('extractedSkills').value);
+
+            // Add the weights
+            formData.append('introduction_weight', document.getElementById('introductionWeight').value);
+            formData.append('experience_weight', document.getElementById('experienceWeight').value);
+            formData.append('skills_weight', document.getElementById('skillsWeight').value);
+            formData.append('motivation_weight', document.getElementById('motivationWeight').value);
+            formData.append('conclusion_weight', document.getElementById('conclusionWeight').value);
+
+            try {
+                // Generate cover letter
+                const generateResponse = await fetch('/generate_cover_letter', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!generateResponse.ok) {
+                    const errorData = await generateResponse.json();
+                    throw new Error(errorData.error || 'Generation failed');
+                }
+
+                const generateData = await generateResponse.json();
+                generatedPdfPath = generateData.pdf_path;
+
+                // Show the action buttons
+                document.getElementById('actionButtons').style.display = 'block';
+
+                loading.style.display = 'none';
+                successAlert.textContent = 'Cover letter generated successfully!';
+                successAlert.style.display = 'block';
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = error.message || 'An error occurred. Please try again.';
+                errorAlert.style.display = 'block';
+                console.error('Error:', error);
+            }
+        });
+
+        // Handle email sending
+        document.getElementById('sendEmailBtn').addEventListener('click', async () => {
+            const loading = document.querySelector('.loading');
+            const successAlert = document.querySelector('.alert-success');
+            const errorAlert = document.querySelector('.alert-danger');
+            const email = document.getElementById('email').value;
+
+            if (!email) {
+                errorAlert.textContent = 'Please enter an email address.';
+                errorAlert.style.display = 'block';
+                return;
+            }
+
+            loading.style.display = 'block';
+            successAlert.style.display = 'none';
+            errorAlert.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('email', email);
+
+            try {
+                const sendResponse = await fetch('/send_cover_letter', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!sendResponse.ok) {
+                    const errorData = await sendResponse.json();
+                    throw new Error(errorData.error || 'Sending failed');
+                }
+
+                loading.style.display = 'none';
+                successAlert.textContent = 'Cover letter sent successfully! Check your email.';
+                successAlert.style.display = 'block';
+            } catch (error) {
+                loading.style.display = 'none';
+                errorAlert.textContent = error.message || 'Failed to send email. Please try again.';
+                errorAlert.style.display = 'block';
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

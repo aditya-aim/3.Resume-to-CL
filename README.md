@@ -1,161 +1,184 @@
 # 📄 **Cover Letter Generator API**
 
-This project provides a Flask-based API that allows users to generate professional cover letters based on resume data extracted from a PDF file using OpenAI's GPT model. The generated cover letter can be downloaded as a PDF or sent via email.
+A Flask-based API that generates professional cover letters from PDF resumes using OpenAI's GPT model. The API supports PDF generation and email delivery of cover letters.
 
----
+## 📁 **Project Structure**
 
-## 🚀 **Features**
+```
+cover-letter-generator/
+├── app.py                 # Main Flask application with API endpoints
+├── templates/             # Frontend templates
+│   └── index.html        # Main web interface
+├── .env                  # Environment variables (API keys, credentials)
+├── requirements.txt      # Python dependencies
+└── .gitignore           # Git ignore rules
+```
 
-* ✅ Upload a PDF resume
-* ✅ Extract data using OpenAI GPT-4o
-* ✅ Generate a custom cover letter based on extracted data
-* ✅ Save the cover letter as a PDF
-* ✅ Send the cover letter via email
+## 🔑 **Environment Variables**
 
+Create a `.env` file with the following variables:
 
+```
+OPENAI_API_KEY=your-openai-api-key
+FLASK_SECRET_KEY=your-secret-key-here
+EMAIL_USERNAME=your-email@gmail.com
+EMAIL_PASSWORD=your-email-app-password
+```
 
----
+## 📚 **API Documentation**
 
+### Base URL
 
+```
+http://localhost:5000
+```
 
-### ✅ **Python Version**
+### Endpoints
 
-This project runs on **Python 3.12.7**
+#### 1. Upload Resume
 
-## 📚 **Installation**
+```http
+POST /upload
+Content-Type: multipart/form-data
 
-### **1. Clone the Repository**
+Form Data:
+- resume: PDF file
+```
+
+**Response (200 OK)**
+
+```json
+{
+    "message": "Resume processed successfully",
+    "data": {
+        "name": "Extracted Name",
+        "experience": "Years of Experience",
+        "skills": "Comma-separated Skills"
+    }
+}
+```
+
+**Error Responses**
+
+- 400 Bad Request: No file provided or invalid file type
+- 500 Internal Server Error: Processing failure
+
+#### 2. Generate Cover Letter
+
+```http
+POST /generate_cover_letter
+Content-Type: multipart/form-data
+
+Form Data:
+- job_title: string
+- company: string
+- job_description: string
+- hr_name: string (optional, default: "Hiring Manager")
+- name: string (optional, from resume)
+- experience: string (optional, from resume)
+- skills: string (optional, from resume)
+- introduction_weight: integer (1-5, default: 3)
+- experience_weight: integer (1-5, default: 3)
+- skills_weight: integer (1-5, default: 3)
+- motivation_weight: integer (1-5, default: 3)
+- conclusion_weight: integer (1-5, default: 3)
+```
+
+**Response (200 OK)**
+
+```json
+{
+    "message": "Cover letter generated successfully",
+    "pdf_path": "path/to/cover_letter.pdf"
+}
+```
+
+**Error Responses**
+
+- 400 Bad Request: Missing required fields
+- 500 Internal Server Error: Generation failure
+
+#### 3. Download Cover Letter
+
+```http
+GET /download_cover_letter
+```
+
+**Response (200 OK)**
+
+- Content-Type: application/pdf
+- File: cover_letter.pdf
+
+**Error Responses**
+
+- 404 Not Found: Cover letter not generated
+- 500 Internal Server Error: Download failure
+
+#### 4. Send Cover Letter via Email
+
+```http
+POST /send_cover_letter
+Content-Type: multipart/form-data
+
+Form Data:
+- email: string (recipient email)
+```
+
+**Response (200 OK)**
+
+```json
+{
+    "message": "Cover letter sent successfully"
+}
+```
+
+**Error Responses**
+
+- 400 Bad Request: No email provided
+- 404 Not Found: Cover letter not generated
+- 500 Internal Server Error: Email sending failure
+
+## 🛠️ **Setup & Installation**
+
+1. **Clone Repository**
 
 ```bash
 git clone https://github.com/your-repo/cover-letter-generator.git
 cd cover-letter-generator
 ```
 
-### **2. Set Up a Virtual Environment**
+2. **Create Virtual Environment**
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### **3. Install Dependencies**
+3. **Install Dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### **4. Create a `.env` File**
-
-Create a `.env` file in the project directory and add your OpenAI API key:
-
-```
-OPENAI_API_KEY=your-openai-api-key
-```
-
-### **5. Start the Flask Server**
+4. **Run Application**
 
 ```bash
 flask run
 ```
 
----
+## ⚠️ **Error Handling**
 
-## 🛠️ **API Endpoints**
-
-### **1. Generate Cover Letter**
-
-Generates a cover letter based on data extracted from a resume PDF.
-
-**URL:**
-
-```
-POST /generate_cover_letter
-```
-
-**Headers:**
-
-| Header              | Type   | Required | Description                                      |
-| ------------------- | ------ | -------- | ------------------------------------------------ |
-| `HR`              | String | ✅       | Name of the HR or recruiter                      |
-| `Job-Title`       | String | ✅       | Job title being applied for                      |
-| `Company`         | String | ✅       | Company name                                     |
-| `Job-Description` | String | ✅       | Description of the job                           |
-| `Tone`            | String | ❌       | Writing tone (`Professional`,`Casual`, etc.) |
-| `Style`           | String | ❌       | Writing style (`Concise`,`Detailed`, etc.)   |
-
-**Request:**
-
-* **Form-data:**
-  * `file` → PDF file of the resume
-
-**Example Request (cURL):**
-
-```bash
-curl -X POST http://127.0.0.1:5000/generate_cover_letter \
-  -H "HR: John Doe" \
-  -H "Job-Title: Software Engineer" \
-  -H "Company: OpenAI" \
-  -H "Job-Description: Develop AI models to improve user experience" \
-  -F "file=@resume.pdf"
-```
-
-**Response:**
-
-* **Success:** Returns the generated cover letter PDF
-* **Failure:** JSON error message
-
-**Example Response:**
+All endpoints return appropriate HTTP status codes and JSON error messages:
 
 ```json
 {
-  "error": "Missing HR, Job Title, Company, or Job Description in headers"
+    "error": "Error message description"
 }
 ```
 
----
+Common status codes:
 
-### **2. Send Cover Letter via Email**
-
-Sends the generated cover letter to the specified email address.
-
-**URL:**
-
-```
-POST /send_cover_letter
-```
-
-**Headers:**
-
-| Header    | Type   | Required | Description             |
-| --------- | ------ | -------- | ----------------------- |
-| `Email` | String | ✅       | Recipient email address |
-
-**Example Request (cURL):**
-
-```bash
-curl -X POST http://127.0.0.1:5000/send_cover_letter \
-  -H "Email: example@gmail.com"
-```
-
-**Response:**
-
-* **Success:** `{ "message": "Cover letter sent successfully!" }`
-* **Failure:** JSON error message
-
-**Example Response:**
-
-```json
-{
-  "error": "Cover letter not found. Generate it first."
-}
-```
-
----
-
-## 🧠 **How It Works**
-
-1. **Resume Upload:** The user uploads a PDF resume.
-2. **Data Extraction:** OpenAI GPT-4o extracts key details like name, experience, and skills.
-3. **Cover Letter Generation:** OpenAI generates a customized cover letter.
-4. **PDF Generation:** The cover letter is saved as a PDF.
-5. **Email Sending:** The cover letter can be sent via email.
+- 200: Success
+- 400: Bad Request
+- 404: Not Found
+- 500: Internal Server Error
